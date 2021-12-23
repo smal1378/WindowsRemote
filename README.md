@@ -1,2 +1,2 @@
 # WindowsRemote
-A Python Service To Controll Over Windows Remotly From Local Network.
+A Python Service To Control Over Windows Remotely From Local Network.
