@@ -1,4 +1,6 @@
 import os
+import select
+import time
 
 import win32serviceutil
 import win32service
@@ -28,24 +30,64 @@ class AppServerSvc (win32serviceutil.ServiceFramework):
 
     def main(self):
         s = socket.socket()
+        s.setblocking(False)
         s.bind(("", 8085))
         s.listen()
-        while True:
-            conn, addr = s.accept()
-            login = conn.recv(2048)
-            if not self.login(login):
-                conn.sendall(b"WRONG")
+        potential_readers = []
+        logged_in = []
+        new_conn = []
+        while True:  # mainloop
+            ready_to_read, ready_to_write, in_error = select.select(potential_readers + [s],
+                                                                    potential_readers,
+                                                                    potential_readers, 60)
+            time.sleep(2)
+            for conn in in_error:
+                potential_readers.remove(conn)
                 conn.close()
-            else:
-                conn.sendall(b"OK")
-                with conn:
-                    while True:
+                print("DEBUG removed connection")
+            if in_error:
+                continue
+            for conn in new_conn:
+                if conn in ready_to_write:
+                    print("DEBUG, Yuhaaa sending 'LOGIN;'")
+                    conn.sendall(b"LOGIN;")
+                    new_conn.remove(conn)
+            for conn in ready_to_read:
+                conn: socket.socket
+                if conn == s:
+                    new = s.accept()[0]
+                    potential_readers.append(new)
+                    new_conn.append(new)
+                elif conn not in logged_in:
+                    try:
+                        login = conn.recv(2048)
+                    except ConnectionResetError:
+                        conn.close()
+                        potential_readers.remove(conn)
+                        continue
+                    if not self.login(login):
+                        conn.sendall(b"WRONG;")
+                    else:
+                        logged_in.append(conn)
+                        conn.sendall(b"OK;")
+                    continue
+                else:
+                    try:
                         data = conn.recv(1024)
-                        if not data:
-                            break
-                        conn.sendall(b"RECEIVED")
-                        for i in data.split(b";"):  # this is the seperator
-                            self.command(i)
+                    except ConnectionResetError:
+                        conn.close()
+                        potential_readers.remove(conn)
+                        continue
+                    if data:
+                        conn.sendall(b"RECEIVED;")
+                        x = b""  # Yes Ofcourse! I know that a half received command will mess everything.
+                        # TODO: Fix it
+                        for i in data:  # this is end of command character
+                            if i == b";":
+                                self.command(x)
+                                x = b""
+                            else:
+                                x += i
 
     @staticmethod
     def command(data):
