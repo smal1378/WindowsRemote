@@ -39,29 +39,30 @@ class Remote:
         return False
 
 
-while True:
-    print("----- WindowsRemote Client -----")
-    remote = Remote()
-    print("Connecting to", remote.address)
-    if not remote.wait_readable(10):
-        print("Connection Failed, Restarting..")
-        sleep(3)
-        continue
-    if not remote.login('123'):
-        print("Login Failed. exiting..")
-        exit()
-    a = time.time()
-    if not remote.send():
-        print("Ping Failed. exiting..")
-        exit()
-    print(f"Connected. Ping:{round((time.time() - a) * 1000)}ms")
+if __name__ == '__main__':
     while True:
-        c = input("Command>>> ").lower().strip()
-        if c == 'exit':
+        print("----- WindowsRemote Client -----")
+        remote = Remote()
+        print("Connecting to", remote.address)
+        if not remote.wait_readable(10):
+            print("Connection Failed, Restarting..")
+            sleep(3)
+            continue
+        if not remote.login('123'):
+            print("Login Failed. exiting..")
             exit()
-        if c == 'reconnect' or c == 'restart':
-            break
-        if remote.send(c):
-            print("Done.")
-        else:
-            print("Failed.")
+        a = time.time()
+        if not remote.send():
+            print("Ping Failed. exiting..")
+            exit()
+        print(f"Connected. Ping:{round((time.time() - a) * 1000)}ms")
+        while True:
+            c = input("Command>>> ").lower().strip()
+            if c == 'exit':
+                exit()
+            if c == 'reconnect' or c == 'restart':
+                break
+            if remote.send(c):
+                print("Done.")
+            else:
+                print("Failed.")
