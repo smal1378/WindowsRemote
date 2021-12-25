@@ -1,6 +1,9 @@
+# Author: Esmail Mahjoor - @smal1378
 import os
 import select
 import socket
+VER = 1.00
+BETA = True
 
 
 class Service:
