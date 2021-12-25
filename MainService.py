@@ -33,6 +33,7 @@ class AppServerSvc (win32serviceutil.ServiceFramework):
         s.bind(("", 8085))
         s.listen()
         potential_readers = []
+        buffers = []  # for each socket in potential_readers list there is a buffer here
         logged_in = []
         new_conn = []
         while True:  # mainloop
@@ -54,6 +55,7 @@ class AppServerSvc (win32serviceutil.ServiceFramework):
                 if conn == s:
                     new = s.accept()[0]
                     potential_readers.append(new)
+                    buffers.append("")
                     new_conn.append(new)
                 elif conn not in logged_in:
                     try:
@@ -76,9 +78,8 @@ class AppServerSvc (win32serviceutil.ServiceFramework):
                         potential_readers.remove(conn)
                         continue
                     if data:
-                        x = ""  # Yes Ofcourse! I know that a half received command will mess everything.
-                        # TODO: Fix it
-                        for i in data:  # this is end of command character
+                        x = buffers[potential_readers.index(conn)]
+                        for i in data:
                             if chr(i) == ";":
                                 if self.command(x):
                                     conn.sendall(b"DONE;")
@@ -87,6 +88,7 @@ class AppServerSvc (win32serviceutil.ServiceFramework):
                                 x = ""
                             else:
                                 x += chr(i)
+                        buffers[potential_readers.index(conn)] = x
                     else:
                         conn.close()
                         potential_readers.remove(conn)
