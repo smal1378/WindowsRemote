@@ -77,22 +77,22 @@ class AppServerSvc (win32serviceutil.ServiceFramework):
                         continue
                     if data:
                         conn.sendall(b"RECEIVED;")
-                        x = b""  # Yes Ofcourse! I know that a half received command will mess everything.
+                        x = ""  # Yes Ofcourse! I know that a half received command will mess everything.
                         # TODO: Fix it
                         for i in data:  # this is end of command character
                             if chr(i) == ";":
                                 self.command(x)
-                                x = b""
+                                x = ""
                             else:
-                                x += bytes(chr(i), encoding='utf-8')
+                                x += chr(i)
 
     @staticmethod
-    def command(data):
-        if data.lower().strip() == b"shutdown":
+    def command(data: str):
+        if data.lower().strip() == "shutdown":
             os.system("shutdown /s /t 60")
-        elif data.lower().strip() == b"hibernate":
+        elif data.lower().strip() == "hibernate":
             os.system("shutdown /h")
-        elif data.lower().strip() == b"exit":
+        elif data.lower().strip() == "exit":
             exit()
 
     @staticmethod
