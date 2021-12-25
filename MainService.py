@@ -99,6 +99,8 @@ class AppServerSvc (win32serviceutil.ServiceFramework):
             os.system("shutdown /h")
         elif data.lower().strip() == "exit":
             exit()
+        elif data.lower().strip() == "ping":
+            pass
         else:
             return False
         return True
