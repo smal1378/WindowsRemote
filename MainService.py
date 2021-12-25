@@ -43,12 +43,10 @@ class AppServerSvc (win32serviceutil.ServiceFramework):
             for conn in in_error:
                 potential_readers.remove(conn)
                 conn.close()
-                print("DEBUG removed connection")
             if in_error:
                 continue
             for conn in new_conn:
                 if conn in ready_to_write:
-                    print("DEBUG, Yuhaaa sending 'LOGIN;'")
                     conn.sendall(b"LOGIN;")
                     new_conn.remove(conn)
             for conn in ready_to_read:
@@ -90,7 +88,6 @@ class AppServerSvc (win32serviceutil.ServiceFramework):
 
     @staticmethod
     def command(data):
-        print("DEBUG: command ", data, "received")
         if data.lower().strip() == b"shutdown":
             os.system("shutdown /s /t 60")
 
