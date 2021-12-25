@@ -80,11 +80,11 @@ class AppServerSvc (win32serviceutil.ServiceFramework):
                         x = b""  # Yes Ofcourse! I know that a half received command will mess everything.
                         # TODO: Fix it
                         for i in data:  # this is end of command character
-                            if i == b";":
+                            if chr(i) == ";":
                                 self.command(x)
                                 x = b""
                             else:
-                                x += i
+                                x += bytes(chr(i), encoding='utf-8')
 
     @staticmethod
     def command(data):
