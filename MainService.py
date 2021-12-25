@@ -90,6 +90,10 @@ class AppServerSvc (win32serviceutil.ServiceFramework):
     def command(data):
         if data.lower().strip() == b"shutdown":
             os.system("shutdown /s /t 60")
+        elif data.lower().strip() == b"hibernate":
+            os.system("shutdown /h")
+        elif data.lower().strip() == b"exit":
+            exit()
 
     @staticmethod
     def login(info):
