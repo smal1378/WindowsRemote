@@ -58,7 +58,7 @@ class AppServerSvc (win32serviceutil.ServiceFramework):
                 elif conn not in logged_in:
                     try:
                         login = conn.recv(2048)
-                    except ConnectionResetError:
+                    except (ConnectionAbortedError, ConnectionResetError):
                         conn.close()
                         potential_readers.remove(conn)
                         continue
@@ -71,20 +71,25 @@ class AppServerSvc (win32serviceutil.ServiceFramework):
                 else:
                     try:
                         data = conn.recv(1024)
-                    except ConnectionResetError:
+                    except (ConnectionAbortedError, ConnectionResetError):
                         conn.close()
                         potential_readers.remove(conn)
                         continue
                     if data:
-                        conn.sendall(b"RECEIVED;")
                         x = ""  # Yes Ofcourse! I know that a half received command will mess everything.
                         # TODO: Fix it
                         for i in data:  # this is end of command character
                             if chr(i) == ";":
-                                self.command(x)
+                                if self.command(x):
+                                    conn.sendall(b"DONE;")
+                                else:
+                                    conn.sendall(b"FAIL;")
                                 x = ""
                             else:
                                 x += chr(i)
+                    else:
+                        conn.close()
+                        potential_readers.remove(conn)
 
     @staticmethod
     def command(data: str):
@@ -94,6 +99,9 @@ class AppServerSvc (win32serviceutil.ServiceFramework):
             os.system("shutdown /h")
         elif data.lower().strip() == "exit":
             exit()
+        else:
+            return False
+        return True
 
     @staticmethod
     def login(info):
